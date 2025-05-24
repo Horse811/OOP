@@ -4,7 +4,7 @@ class Product:
     def __init__(self, name: str, description: str, price: float, quantity: int):
         self.name = name
         self.description = description
-        self.__price = price  # Приватный атрибут цены
+        self.__price = price
         self.quantity = quantity
 
     @classmethod
@@ -19,12 +19,10 @@ class Product:
 
     @property
     def price(self):
-        """Геттер для цены."""
         return self.__price
 
     @price.setter
     def price(self, new_price):
-        """Сеттер для цены с проверкой."""
         if new_price > 0:
             self.__price = new_price
         else:
@@ -38,30 +36,28 @@ class Category:
     product_count = 0
 
     def __init__(self, name: str, description: str, products: list[Product] = None):
-        """
-        Инициализация категории.
-
-        :param name: Название категории
-        :param description: Описание категории
-        :param products: Список товаров (по умолчанию None)
-        """
         self.name = name
         self.description = description
-        self.__products = products if products is not None else []  # Приватный атрибут
+        self.__products = []
+        if products is not None:
+            for product in products:
+                self.add_product(product)  # Используем наш метод для добавления
         Category.category_count += 1
-        Category.product_count += len(self.__products)
 
-    def add_product(self, product: Product):
-        """Добавляет товар в категорию."""
-        if product not in self.__products:
-            self.__products.append(product)
-            Category.product_count += 1
-        else:
-            print(f"Товар {product.name} уже есть в категории")
+    def add_product(self, product):
+        """Добавляет продукт в категорию с проверкой типа."""
+        if not isinstance(product, Product):
+            raise TypeError("Можно добавлять только объекты класса Product")
+
+        # Проверка на дубликаты по имени
+        if product.name in (p.name for p in self.__products):
+            raise ValueError(f"Продукт с именем '{product.name}' уже существует в категории")
+
+        self.__products.append(product)
+        Category.product_count += 1
 
     @property
     def products(self):
-        """Геттер для получения списка товаров в виде строк."""
         return "\n".join(
             f"{p.name}, {p.price} руб. Остаток: {p.quantity} шт."
             for p in self.__products
