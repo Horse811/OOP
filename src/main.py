@@ -7,9 +7,16 @@ class Product:
         self.__price = price
         self.quantity = quantity
 
+    def __str__(self):
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    def __add__(self, other):
+        if not isinstance(other, Product):
+            raise TypeError("Можно складывать только объекты Product")
+        return (self.price * self.quantity) + (other.price * other.quantity)
+
     @classmethod
     def new_product(cls, product_data: dict):
-        """Класс-метод для создания продукта из словаря."""
         return cls(
             name=product_data['name'],
             description=product_data['description'],
@@ -41,33 +48,34 @@ class Category:
         self.__products = []
         if products is not None:
             for product in products:
-                self.add_product(product)  # Используем наш метод для добавления
+                self.add_product(product)
         Category.category_count += 1
 
+    def __str__(self):
+        total_quantity = sum(p.quantity for p in self.__products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
+
     def add_product(self, product):
-        """Добавляет продукт в категорию с проверкой типа."""
         if not isinstance(product, Product):
             raise TypeError("Можно добавлять только объекты класса Product")
-
-        # Проверка на дубликаты по имени
         if product.name in (p.name for p in self.__products):
-            raise ValueError(f"Продукт с именем '{product.name}' уже существует в категории")
-
+            raise ValueError(f"Продукт с именем '{product.name}' уже существует")
         self.__products.append(product)
         Category.product_count += 1
 
     @property
     def products(self):
-        return "\n".join(
-            f"{p.name}, {p.price} руб. Остаток: {p.quantity} шт."
-            for p in self.__products
-        )
+        return "\n".join(str(p) for p in self.__products)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     product1 = Product("Samsung Galaxy S23 Ultra", "256GB, Серый цвет, 200MP камера", 180000.0, 5)
     product2 = Product("Iphone 15", "512GB, Gray space", 210000.0, 8)
     product3 = Product("Xiaomi Redmi Note 11", "1024GB, Синий", 31000.0, 14)
+
+    print(str(product1))
+    print(str(product2))
+    print(str(product3))
 
     category1 = Category(
         "Смартфоны",
@@ -75,31 +83,11 @@ if __name__ == "__main__":
         [product1, product2, product3]
     )
 
-    print("Товары в категории:")
+    print(str(category1))
+
     print(category1.products)
 
-    product4 = Product("55\" QLED 4K", "Фоновая подсветка", 123000.0, 7)
-    category1.add_product(product4)
-    print("\nПосле добавления нового товара:")
-    print(category1.products)
-    print(f"Общее количество товаров: {Category.product_count}")
-
-    new_product = Product.new_product(
-        {"name": "Samsung Galaxy S23 Ultra", "description": "256GB, Серый цвет, 200MP камера",
-         "price": 180000.0, "quantity": 5})
-
-    print("\nИнформация о новом товаре:")
-    print(new_product.name)
-    print(new_product.description)
-    print(new_product.price)
-    print(new_product.quantity)
-
-    print("\nИзменение цены:")
-    new_product.price = 800
-    print(f"Новая цена: {new_product.price}")
-
-    print("Попытка установить недопустимую цену:")
-    new_product.price = -100
-    print(f"Цена после попытки изменения: {new_product.price}")
-    new_product.price = 0
-    print(f"Цена после попытки изменения: {new_product.price}")
+    print(product1 + product2)
+    print(product1 + product3)
+    print(product2 + product3)
+    
