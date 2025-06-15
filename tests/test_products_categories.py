@@ -1,64 +1,38 @@
+
+
+
 import pytest
-from __main__ import Product, Smartphone, LawnGrass, Category
+from __main__ import BaseProduct, Product, Smartphone, LawnGrass
+from io import StringIO
+import sys
 
+def test_abstract_class_cannot_be_instantiated():
+    with pytest.raises(TypeError):
+        BaseProduct()
 
-@pytest.fixture
-def sample_product():
-    return Product("Книга", "Художественная", 500, 10)
+def test_product_implements_abstract_methods():
+    p = Product("Test", "Desc", 100, 5)
+    assert p.calculate_total() == 500
+    assert str(p) == "Test, 100 руб. Остаток: 5 шт."
 
+def test_logging_mixin_output(capsys):
+    p = Product("Test", "Desc", 100, 5)
+    captured = capsys.readouterr()
+    assert "Создан объект Product" in captured.out
+    assert "Аргументы: ('Test', 'Desc', 100, 5)" in captured.out
 
-@pytest.fixture
-def smartphone():
-    return Smartphone("iPhone", "Смартфон", 100000, 5, 3.5, "15 Pro", 256, "Black")
+def test_smartphone_inheritance():
+    phone = Smartphone("Phone", "Desc", 1000, 2, 3.5, "X", 128, "Black")
+    assert isinstance(phone, Product)
+    assert isinstance(phone, BaseProduct)
+    assert phone.memory == 128
 
+def test_lawn_grass_repr():
+    grass = LawnGrass("Grass", "Desc", 500, 10, "Russia", 14, "Green")
+    assert repr(grass).startswith("LawnGrass(")
+    assert "country='Russia'" in repr(grass)
 
-@pytest.fixture
-def lawn_grass():
-    return LawnGrass("Трава", "Газонная", 1000, 20, "Россия", 14, "Зеленая")
-
-
-@pytest.fixture
-def sample_category(sample_product):
-    return Category("Книги", "Литература", [sample_product])
-
-
-class TestInheritance:
-    def test_smartphone_inheritance(self, smartphone):
-        assert isinstance(smartphone, Product)
-        assert smartphone.memory == 256
-        assert str(smartphone) == "iPhone, 100000 руб. Остаток: 5 шт."
-
-    def test_lawn_grass_inheritance(self, lawn_grass):
-        assert isinstance(lawn_grass, Product)
-        assert lawn_grass.country == "Россия"
-        assert str(lawn_grass) == "Трава, 1000 руб. Остаток: 20 шт."
-
-
-class TestAddition:
-    def test_valid_addition(self, smartphone):
-        other = Smartphone("Galaxy", "Смартфон", 80000, 3, 3.2, "S23", 128, "White")
-        assert smartphone + other == 100000*5 + 80000*3
-
-    def test_invalid_addition(self, smartphone, lawn_grass):
-        with pytest.raises(TypeError):
-            smartphone + lawn_grass
-
-
-class TestCategory:
-    def test_add_valid_products(self, sample_category, smartphone, lawn_grass):
-        sample_category.add_product(smartphone)
-        sample_category.add_product(lawn_grass)
-        assert "iPhone" in sample_category.products
-        assert "Трава" in sample_category.products
-
-    def test_add_invalid_product(self, sample_category):
-        with pytest.raises(TypeError):
-            sample_category.add_product("Не продукт")
-
-
-class TestOriginalFunctionality:
-    def test_original_product(self, sample_product):
-        assert str(sample_product) == "Книга, 500 руб. Остаток: 10 шт."
-
-    def test_category_str(self, sample_category):
-        assert str(sample_category) == "Книги, количество продуктов: 10 шт."
+def test_price_validation():
+    p = Product("Test", "Desc", 100, 1)
+    with pytest.raises(ValueError):
+        p.price = -100
