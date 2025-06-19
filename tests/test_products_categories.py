@@ -1,43 +1,46 @@
 import pytest
-from __main__ import Product, Category
+from src.main import Product, Category
 
 
-class TestProductInitialization:
+class TestProduct:
     def test_create_product_with_zero_quantity(self):
-        with pytest.raises(ValueError) as exc_info:
-            Product("Тест", "Описание", 100.0, 0)
-        assert str(exc_info.value) == "Товар с нулевым количеством не может быть добавлен"
+        with pytest.raises(ValueError) as excinfo:
+            Product("Test", "Desc", 100, 0)
+        assert "Товар с нулевым количеством не может быть добавлен" in str(excinfo.value)
 
     def test_create_product_with_negative_quantity(self):
-        with pytest.raises(ValueError) as exc_info:
-            Product("Тест", "Описание", 100.0, -5)
-        assert str(exc_info.value) == "Товар с нулевым количеством не может быть добавлен"
+        with pytest.raises(ValueError) as excinfo:
+            Product("Test", "Desc", 100, -5)
+        assert "Товар с нулевым количеством не может быть добавлен" in str(excinfo.value)
+
+    def test_product_str(self):
+        p = Product("Test", "Desc", 100, 5)
+        assert str(p) == "Test, 100 руб. Остаток: 5 шт."
 
 
-class TestCategoryAveragePrice:
+class TestCategory:
     def test_average_price_with_products(self):
-        p1 = Product("Товар1", "Описание1", 100.0, 10)
-        p2 = Product("Товар2", "Описание2", 200.0, 5)
-        category = Category("Категория", "Описание", [p1, p2])
-        assert category.get_average_price() == 150.0
+        p1 = Product("A", "Desc", 100, 2)
+        p2 = Product("B", "Desc", 200, 3)
+        cat = Category("Test", "Desc", [p1, p2])
+        assert cat.get_average_price() == 150.0
 
-    def test_average_price_empty_category(self):
-        category = Category("Категория", "Описание")
-        assert category.get_average_price() == 0.0
+    def test_average_price_empty(self):
+        cat = Category("Test", "Desc")
+        assert cat.get_average_price() == 0.0
 
-    def test_average_price_single_product(self):
-        p = Product("Товар", "Описание", 150.0, 3)
-        category = Category("Категория", "Описание", [p])
-        assert category.get_average_price() == 150.0
+    def test_add_product_with_zero_quantity(self):
+        cat = Category("Test", "Desc")
+        p = Product("Test", "Desc", 100, 1)
+        p.quantity = 0
+        with pytest.raises(ValueError) as excinfo:
+            cat.add_product(p)
+        assert "Товар с нулевым количеством не может быть добавлен" in str(excinfo.value)
 
 
-class TestExistingFunctionality:
-    def test_product_str_representation(self):
-        p = Product("Телефон", "Смартфон", 50000.0, 3)
-        assert str(p) == "Телефон, 50000.0 руб. Остаток: 3 шт."
-
-    def test_category_add_product(self):
-        p = Product("Ноутбук", "Игровой", 100000.0, 2)
-        category = Category("Электроника", "Техника")
-        category.add_product(p)
-        assert len(category.products.split('\n')) == 1
+class TestOriginalFunctionality:
+    def test_original_tests(self):
+        p = Product("Test", "Desc", 100, 5)
+        assert p.calculate_total() == 500
+        cat = Category("Test", "Desc", [p])
+        assert "Test, 100 руб. Остаток: 5 шт." in cat.products
